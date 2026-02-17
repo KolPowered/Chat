@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
@@ -20,23 +20,23 @@ function TradeCard({ trade, nflPlayers, ktcValues }) {
   }
 
   return (
-    <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-700/50 hover:border-gray-600 transition-colors">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-mono text-gray-500">
-          {trade.year} — Week {trade.week}
+    <div className="bg-gray-800/40 rounded-xl p-3 sm:p-4 border border-gray-700/50 hover:border-gray-600 transition-colors">
+      <div className="flex items-center justify-between mb-2 sm:mb-3">
+        <span className="text-[10px] sm:text-xs font-mono text-gray-500">
+          {trade.year} — Wk {trade.week}
         </span>
         {trade.timestamp && (
-          <span className="text-xs text-gray-600">
+          <span className="text-[10px] sm:text-xs text-gray-600">
             {new Date(trade.timestamp).toLocaleDateString()}
           </span>
         )}
       </div>
-      <div className={`grid gap-4 ${trade.sides.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+      <div className={`grid gap-3 sm:gap-4 ${trade.sides.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
         {trade.sides.map((side, i) => {
           const ktcVal = sideValue(side);
           return (
-            <div key={i} className="space-y-2">
-              <p className="text-sm font-semibold text-white">{side.display_name} receives:</p>
+            <div key={i} className="space-y-1.5 sm:space-y-2">
+              <p className="text-xs sm:text-sm font-semibold text-white">{side.display_name} receives:</p>
               <div className="space-y-1">
                 {side.playersReceived.map((pid) => {
                   const name = getPlayerName(pid, nflPlayers);
@@ -44,9 +44,9 @@ function TradeCard({ trade, nflPlayers, ktcValues }) {
                   const ktc = lookupKtcValue(ktcValues, name);
                   return (
                     <div key={pid} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                         {pos && (
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                          <span className={`text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded shrink-0 ${
                             pos === 'QB' ? 'bg-red-900/50 text-red-400' :
                             pos === 'RB' ? 'bg-blue-900/50 text-blue-400' :
                             pos === 'WR' ? 'bg-green-900/50 text-green-400' :
@@ -55,28 +55,28 @@ function TradeCard({ trade, nflPlayers, ktcValues }) {
                             {pos}
                           </span>
                         )}
-                        <span className="text-sm text-gray-300">{name}</span>
+                        <span className="text-xs sm:text-sm text-gray-300 truncate">{name}</span>
                       </div>
                       {ktc && (
-                        <span className="text-xs font-mono text-emerald-400">{ktc.value}</span>
+                        <span className="text-[10px] sm:text-xs font-mono text-emerald-400 shrink-0 ml-1">{ktc.value}</span>
                       )}
                     </div>
                   );
                 })}
                 {side.picksReceived.map((dp, j) => (
-                  <div key={j} className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-400">
+                  <div key={j} className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-400 shrink-0">
                       PICK
                     </span>
-                    <span className="text-sm text-gray-300">{formatDraftPick(dp)}</span>
+                    <span className="text-xs sm:text-sm text-gray-300">{formatDraftPick(dp)}</span>
                   </div>
                 ))}
                 {side.playersReceived.length === 0 && side.picksReceived.length === 0 && (
-                  <span className="text-xs text-gray-600 italic">Nothing</span>
+                  <span className="text-[10px] sm:text-xs text-gray-600 italic">Nothing</span>
                 )}
               </div>
               {hasKtc && ktcVal > 0 && (
-                <p className="text-xs font-mono text-emerald-500 mt-1">
+                <p className="text-[10px] sm:text-xs font-mono text-emerald-500 mt-1">
                   KTC Total: {ktcVal}
                 </p>
               )}
@@ -91,11 +91,29 @@ function TradeCard({ trade, nflPlayers, ktcValues }) {
 function TradeNetworkSimple({ tradeNetwork, ownerNames, ownerColorMap }) {
   const { network, teamTradeCounts } = tradeNetwork;
   const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 500, height: 400 });
+
+  const updateSize = useCallback(() => {
+    if (containerRef.current) {
+      const w = containerRef.current.clientWidth;
+      const h = Math.min(w * 0.8, 400);
+      setCanvasSize({ width: w, height: h });
+    }
+  }, []);
+
+  useEffect(() => {
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, [updateSize]);
 
   const nodes = useMemo(() => {
     const ids = Object.keys(teamTradeCounts);
     const count = ids.length;
-    const cx = 250, cy = 200, radius = 150;
+    const cx = canvasSize.width / 2;
+    const cy = canvasSize.height / 2;
+    const radius = Math.min(cx, cy) - 40;
     return ids.map((id, i) => {
       const angle = (2 * Math.PI * i) / count - Math.PI / 2;
       return {
@@ -107,7 +125,7 @@ function TradeNetworkSimple({ tradeNetwork, ownerNames, ownerColorMap }) {
         color: ownerColorMap[id] || '#3B82F6',
       };
     });
-  }, [teamTradeCounts, ownerNames, ownerColorMap]);
+  }, [teamTradeCounts, ownerNames, ownerColorMap, canvasSize]);
 
   const edges = useMemo(() => {
     return Object.entries(network).map(([key, count]) => {
@@ -121,13 +139,17 @@ function TradeNetworkSimple({ tradeNetwork, ownerNames, ownerColorMap }) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = 500 * dpr;
-    canvas.height = 400 * dpr;
+    canvas.width = canvasSize.width * dpr;
+    canvas.height = canvasSize.height * dpr;
     ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, 500, 400);
+    ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
 
     const nodeMap = {};
     nodes.forEach((n) => { nodeMap[n.id] = n; });
+
+    const isMobile = canvasSize.width < 400;
+    const fontSize = isMobile ? 9 : 11;
+    const edgeFontSize = isMobile ? 8 : 10;
 
     // Draw edges
     for (const edge of edges) {
@@ -146,7 +168,7 @@ function TradeNetworkSimple({ tradeNetwork, ownerNames, ownerColorMap }) {
         const mx = (from.x + to.x) / 2;
         const my = (from.y + to.y) / 2;
         ctx.fillStyle = '#6B7280';
-        ctx.font = '10px Inter, sans-serif';
+        ctx.font = `${edgeFontSize}px Inter, sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillText(edge.count.toString(), mx, my - 4);
       }
@@ -154,7 +176,9 @@ function TradeNetworkSimple({ tradeNetwork, ownerNames, ownerColorMap }) {
 
     // Draw nodes
     for (const node of nodes) {
-      const r = Math.max(8, Math.min(node.trades * 1.5, 20));
+      const r = isMobile
+        ? Math.max(6, Math.min(node.trades * 1.2, 14))
+        : Math.max(8, Math.min(node.trades * 1.5, 20));
       ctx.beginPath();
       ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
       ctx.fillStyle = node.color;
@@ -165,18 +189,20 @@ function TradeNetworkSimple({ tradeNetwork, ownerNames, ownerColorMap }) {
 
       // Label
       ctx.fillStyle = '#E5E7EB';
-      ctx.font = '11px Inter, sans-serif';
+      ctx.font = `${fontSize}px Inter, sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText(node.name.split(' ')[0], node.x, node.y + r + 14);
     }
-  }, [nodes, edges]);
+  }, [nodes, edges, canvasSize]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ width: 500, height: 400 }}
-      className="mx-auto"
-    />
+    <div ref={containerRef} className="w-full">
+      <canvas
+        ref={canvasRef}
+        style={{ width: canvasSize.width, height: canvasSize.height }}
+        className="mx-auto"
+      />
+    </div>
   );
 }
 
@@ -251,40 +277,40 @@ export default function TradeHistory({ data }) {
   }, [trades]);
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-4 sm:space-y-6 animate-slide-up">
       {/* Trade Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Trades</p>
-          <p className="text-2xl font-extrabold text-white">{trades.length}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+          <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-1">Total Trades</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-white">{trades.length}</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Major Trades</p>
-          <p className="text-2xl font-extrabold text-yellow-400">{majorTrades.length}</p>
-          <p className="text-xs text-gray-500">Involving 1st round picks</p>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+          <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-1">Major Trades</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-yellow-400">{majorTrades.length}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500">Involving 1st round picks</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Most Active Trader</p>
-          <p className="text-2xl font-extrabold text-blue-400">{tradeFreq[0]?.name || '—'}</p>
-          <p className="text-xs text-gray-500">{tradeFreq[0]?.trades || 0} trades</p>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+          <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-1">Most Active Trader</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-blue-400 truncate">{tradeFreq[0]?.name || '—'}</p>
+          <p className="text-[10px] sm:text-xs text-gray-500">{tradeFreq[0]?.trades || 0} trades</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Trades/Season</p>
-          <p className="text-2xl font-extrabold text-green-400">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+          <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-1">Trades/Season</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-green-400">
             {years.length > 0 ? (trades.length / years.length).toFixed(1) : 0}
           </p>
         </div>
       </div>
 
       {/* Trades Per Year Chart */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Trades Per Season</h3>
-        <div className="h-48">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Trades Per Season</h3>
+        <div className="h-40 sm:h-48">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={tradesByYear}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="year" stroke="#9CA3AF" fontSize={12} />
-              <YAxis stroke="#9CA3AF" fontSize={12} />
+              <XAxis dataKey="year" stroke="#9CA3AF" fontSize={11} />
+              <YAxis stroke="#9CA3AF" fontSize={11} width={30} />
               <Tooltip content={<TradeTooltip />} />
               <Bar dataKey="count" fill="#6366F1" radius={[4, 4, 0, 0]} maxBarSize={40} />
             </BarChart>
@@ -293,13 +319,13 @@ export default function TradeHistory({ data }) {
       </div>
 
       {/* Trade Frequency by Team */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Trade Frequency by Team</h3>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Trade Frequency by Team</h3>
         <div className="space-y-2">
           {tradeFreq.map((t) => (
-            <div key={t.name} className="flex items-center gap-3">
-              <span className="text-sm text-gray-300 w-32 truncate">{t.name}</span>
-              <div className="flex-1 bg-gray-800 rounded-full h-3 overflow-hidden">
+            <div key={t.name} className="flex items-center gap-2 sm:gap-3">
+              <span className="text-xs sm:text-sm text-gray-300 w-24 sm:w-32 truncate shrink-0">{t.name}</span>
+              <div className="flex-1 bg-gray-800 rounded-full h-2.5 sm:h-3 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
@@ -308,16 +334,16 @@ export default function TradeHistory({ data }) {
                   }}
                 />
               </div>
-              <span className="text-xs font-mono text-gray-400 w-8 text-right">{t.trades}</span>
+              <span className="text-xs font-mono text-gray-400 w-8 text-right shrink-0">{t.trades}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Trade Network */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-white mb-2">Trade Network</h3>
-        <p className="text-xs text-gray-500 mb-4">Line thickness indicates frequency of trades between teams</p>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-2">Trade Network</h3>
+        <p className="text-[10px] sm:text-xs text-gray-500 mb-3 sm:mb-4">Line thickness indicates frequency of trades between teams</p>
         <TradeNetworkSimple
           tradeNetwork={tradeNetwork}
           ownerNames={ownerNames}
@@ -326,14 +352,14 @@ export default function TradeHistory({ data }) {
       </div>
 
       {/* Trade History List */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-          <h3 className="text-lg font-bold text-white">Trade Log</h3>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
+        <div className="flex flex-col gap-3 mb-4">
+          <h3 className="text-base sm:text-lg font-bold text-white">Trade Log</h3>
           <div className="flex gap-2 flex-wrap">
             <select
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
-              className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-1.5"
+              className="bg-gray-800 border border-gray-700 text-gray-300 text-xs sm:text-sm rounded-lg px-2.5 sm:px-3 py-1.5 min-h-[36px]"
             >
               <option value="all">All Seasons</option>
               {years.map((y) => (
@@ -345,11 +371,11 @@ export default function TradeHistory({ data }) {
               placeholder="Search player or team..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-1.5 w-48"
+              className="bg-gray-800 border border-gray-700 text-gray-300 text-xs sm:text-sm rounded-lg px-2.5 sm:px-3 py-1.5 flex-1 min-w-[140px] max-w-[240px] min-h-[36px]"
             />
           </div>
         </div>
-        <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+        <div className="space-y-2 sm:space-y-3 max-h-[500px] sm:max-h-[600px] overflow-y-auto pr-1">
           {filteredTrades.slice(0, 50).map((trade) => (
             <TradeCard
               key={trade.transaction_id}
@@ -359,12 +385,12 @@ export default function TradeHistory({ data }) {
             />
           ))}
           {filteredTrades.length > 50 && (
-            <p className="text-center text-gray-600 text-sm py-4">
+            <p className="text-center text-gray-600 text-xs sm:text-sm py-4">
               Showing 50 of {filteredTrades.length} trades
             </p>
           )}
           {filteredTrades.length === 0 && (
-            <p className="text-center text-gray-600 text-sm py-8">No trades found</p>
+            <p className="text-center text-gray-600 text-xs sm:text-sm py-8">No trades found</p>
           )}
         </div>
       </div>

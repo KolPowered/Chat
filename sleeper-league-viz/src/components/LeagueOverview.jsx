@@ -5,24 +5,25 @@ import { computeStandings, getTeamColor } from '../utils/dataProcessing';
 
 function StatCard({ label, value, sub, accent }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 animate-fade-in">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{label}</p>
-      <p className={`text-2xl font-extrabold ${accent || 'text-white'}`}>{value}</p>
-      {sub && <p className="text-sm text-gray-400 mt-1">{sub}</p>}
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 animate-fade-in">
+      <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{label}</p>
+      <p className={`text-lg sm:text-2xl font-extrabold ${accent || 'text-white'} truncate`}>{value}</p>
+      {sub && <p className="text-xs sm:text-sm text-gray-400 mt-1 truncate">{sub}</p>}
     </div>
   );
 }
 
 function ChampionBanner({ champ }) {
   return (
-    <div className="flex items-center gap-3 py-2">
-      <span className="text-sm font-mono text-gray-500 w-12">{champ.year}</span>
-      <div className="flex-1 flex items-center gap-2">
-        <span className="text-yellow-400 text-lg">&#9813;</span>
-        <span className="text-white font-semibold">{champ.champion.display_name}</span>
+    <div className="flex items-center gap-2 sm:gap-3 py-2">
+      <span className="text-xs sm:text-sm font-mono text-gray-500 w-10 sm:w-12 shrink-0">{champ.year}</span>
+      <div className="flex-1 flex items-center gap-1.5 sm:gap-2 min-w-0">
+        <span className="text-yellow-400 text-base sm:text-lg shrink-0">&#9813;</span>
+        <span className="text-white font-semibold text-sm sm:text-base truncate">{champ.champion.display_name}</span>
       </div>
-      <span className="text-gray-500 text-sm">
-        def. {champ.runnerUp.display_name}
+      <span className="text-gray-500 text-xs sm:text-sm shrink-0">
+        def. <span className="hidden sm:inline">{champ.runnerUp.display_name}</span>
+        <span className="sm:hidden">{champ.runnerUp.display_name.split(' ')[0]}</span>
       </span>
     </div>
   );
@@ -77,9 +78,9 @@ export default function LeagueOverview({ data }) {
   });
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-4 sm:space-y-6 animate-slide-up">
       {/* Top Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
           label="Total Seasons"
           value={seasons.length}
@@ -106,8 +107,8 @@ export default function LeagueOverview({ data }) {
       </div>
 
       {/* Championship History */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 animate-fade-in">
-        <h3 className="text-lg font-bold text-white mb-4">Championship History</h3>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 animate-fade-in">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Championship History</h3>
         <div className="divide-y divide-gray-800">
           {championships.map((c) => (
             <ChampionBanner key={c.year} champ={c} />
@@ -116,16 +117,16 @@ export default function LeagueOverview({ data }) {
       </div>
 
       {/* Regular Season Wins by Year */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 animate-fade-in">
-        <h3 className="text-lg font-bold text-white mb-4">Regular Season Wins by Year</h3>
-        <div className="h-80">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 animate-fade-in">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Regular Season Wins by Year</h3>
+        <div className="h-64 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={barData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="year" stroke="#9CA3AF" fontSize={12} />
-              <YAxis stroke="#9CA3AF" fontSize={12} />
+              <XAxis dataKey="year" stroke="#9CA3AF" fontSize={11} tickMargin={4} />
+              <YAxis stroke="#9CA3AF" fontSize={11} width={30} />
               <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: '11px', color: '#9CA3AF' }} />
+              <Legend wrapperStyle={{ fontSize: '10px', color: '#9CA3AF' }} />
               {allTeams.map((team, i) => (
                 <Bar
                   key={team}
@@ -141,16 +142,16 @@ export default function LeagueOverview({ data }) {
       </div>
 
       {/* Points For by Year */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 animate-fade-in">
-        <h3 className="text-lg font-bold text-white mb-4">Total Points by Year</h3>
-        <div className="h-80">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 animate-fade-in">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Total Points by Year</h3>
+        <div className="h-64 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={ptsData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="year" stroke="#9CA3AF" fontSize={12} />
-              <YAxis stroke="#9CA3AF" fontSize={12} />
+              <XAxis dataKey="year" stroke="#9CA3AF" fontSize={11} tickMargin={4} />
+              <YAxis stroke="#9CA3AF" fontSize={11} width={40} />
               <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: '11px', color: '#9CA3AF' }} />
+              <Legend wrapperStyle={{ fontSize: '10px', color: '#9CA3AF' }} />
               {allTeams.map((team, i) => (
                 <Bar
                   key={team}
@@ -166,20 +167,20 @@ export default function LeagueOverview({ data }) {
       </div>
 
       {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 animate-fade-in">
-          <h3 className="text-lg font-bold text-white mb-3">Playoff Appearances</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 animate-fade-in">
+          <h3 className="text-base sm:text-lg font-bold text-white mb-3">Playoff Appearances</h3>
           <div className="space-y-2">
             {[...franchiseStats]
               .sort((a, b) => b.playoffAppearances - a.playoffAppearances)
               .map((f) => (
-                <div key={f.owner_id} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-300">{f.display_name}</span>
-                  <div className="flex items-center gap-2">
+                <div key={f.owner_id} className="flex items-center justify-between gap-2">
+                  <span className="text-xs sm:text-sm text-gray-300 truncate min-w-0">{f.display_name}</span>
+                  <div className="flex items-center gap-2 shrink-0">
                     <div
                       className="h-2 rounded-full"
                       style={{
-                        width: `${(f.playoffAppearances / seasons.length) * 120}px`,
+                        width: `${(f.playoffAppearances / seasons.length) * 100}px`,
                         backgroundColor: ownerColorMap[f.owner_id] || '#3B82F6',
                       }}
                     />
@@ -192,15 +193,15 @@ export default function LeagueOverview({ data }) {
           </div>
         </div>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 animate-fade-in">
-          <h3 className="text-lg font-bold text-white mb-3">All-Time Points Leaders</h3>
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 animate-fade-in">
+          <h3 className="text-base sm:text-lg font-bold text-white mb-3">All-Time Points Leaders</h3>
           <div className="space-y-2">
             {[...franchiseStats]
               .sort((a, b) => b.totalFpts - a.totalFpts)
               .map((f) => (
-                <div key={f.owner_id} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-300">{f.display_name}</span>
-                  <span className="text-sm font-mono text-gray-400">
+                <div key={f.owner_id} className="flex items-center justify-between gap-2">
+                  <span className="text-xs sm:text-sm text-gray-300 truncate min-w-0">{f.display_name}</span>
+                  <span className="text-xs sm:text-sm font-mono text-gray-400 shrink-0">
                     {f.totalFpts.toFixed(1)}
                   </span>
                 </div>

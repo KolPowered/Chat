@@ -82,16 +82,16 @@ export default function HeadToHead({ data }) {
   }, [ownerIds, records, ownerNames]);
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-4 sm:space-y-6 animate-slide-up">
       {/* Team Selector */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Select a Team</h3>
-        <div className="flex flex-wrap gap-2">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Select a Team</h3>
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {ownerIds.map((oid) => (
             <button
               key={oid}
               onClick={() => setSelectedOwner(oid)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1.5 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer min-h-[36px] sm:min-h-0 ${
                 selectedOwner === oid
                   ? 'text-white shadow-lg'
                   : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
@@ -106,21 +106,21 @@ export default function HeadToHead({ data }) {
 
       {/* Selected Team H2H Breakdown */}
       {selectedOwner && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-white mb-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">
             {ownerNames[selectedOwner]}'s Record vs Everyone
           </h3>
-          <div className="h-72">
+          <div className="h-64 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={selectedRecords} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
-                <XAxis type="number" stroke="#9CA3AF" fontSize={12} />
+                <XAxis type="number" stroke="#9CA3AF" fontSize={11} />
                 <YAxis
                   type="category"
                   dataKey="opponent"
                   stroke="#9CA3AF"
-                  fontSize={11}
-                  width={100}
+                  fontSize={10}
+                  width={80}
                   tick={{ fill: '#d1d5db' }}
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -139,83 +139,113 @@ export default function HeadToHead({ data }) {
       )}
 
       {/* H2H Matrix */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 overflow-x-auto">
-        <h3 className="text-lg font-bold text-white mb-4">Head-to-Head Matrix</h3>
-        <table className="w-full text-xs">
-          <thead>
-            <tr>
-              <th className="text-left py-2 px-2 text-gray-500 font-medium">Team</th>
-              {matrixOwners.map((oid) => (
-                <th key={oid} className="py-2 px-1 text-gray-500 font-medium text-center" style={{ minWidth: '60px' }}>
-                  <span className="block truncate max-w-[60px]">{ownerNames[oid]?.split(' ')[0] || '?'}</span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {matrixOwners.map((rowId) => (
-              <tr key={rowId} className="border-t border-gray-800/50">
-                <td className="py-2 px-2 text-gray-300 font-medium whitespace-nowrap">
-                  {ownerNames[rowId] || rowId}
-                </td>
-                {matrixOwners.map((colId) => {
-                  if (rowId === colId) {
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Head-to-Head Matrix</h3>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <table className="w-full text-[10px] sm:text-xs">
+            <thead>
+              <tr>
+                <th className="text-left py-2 px-1 sm:px-2 text-gray-500 font-medium sticky left-0 bg-gray-900 z-10">Team</th>
+                {matrixOwners.map((oid) => (
+                  <th key={oid} className="py-2 px-0.5 sm:px-1 text-gray-500 font-medium text-center" style={{ minWidth: '44px' }}>
+                    <span className="block truncate max-w-[44px] sm:max-w-[60px]">{ownerNames[oid]?.split(' ')[0] || '?'}</span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {matrixOwners.map((rowId) => (
+                <tr key={rowId} className="border-t border-gray-800/50">
+                  <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-gray-300 font-medium whitespace-nowrap sticky left-0 bg-gray-900 z-10">
+                    {(ownerNames[rowId] || rowId).split(' ')[0]}
+                    <span className="hidden sm:inline"> {(ownerNames[rowId] || '').split(' ').slice(1).join(' ')}</span>
+                  </td>
+                  {matrixOwners.map((colId) => {
+                    if (rowId === colId) {
+                      return (
+                        <td key={colId} className="py-1.5 sm:py-2 px-0.5 sm:px-1 text-center bg-gray-800/30">
+                          <span className="text-gray-600">—</span>
+                        </td>
+                      );
+                    }
+                    const rec = records[rowId]?.[colId];
+                    if (!rec) {
+                      return (
+                        <td key={colId} className="py-1.5 sm:py-2 px-0.5 sm:px-1 text-center text-gray-700">0-0</td>
+                      );
+                    }
+                    const isWinning = rec.wins > rec.losses;
+                    const isLosing = rec.losses > rec.wins;
                     return (
-                      <td key={colId} className="py-2 px-1 text-center bg-gray-800/30">
-                        <span className="text-gray-600">—</span>
+                      <td
+                        key={colId}
+                        className={`py-1.5 sm:py-2 px-0.5 sm:px-1 text-center font-mono ${
+                          isWinning ? 'text-green-400' : isLosing ? 'text-red-400' : 'text-gray-400'
+                        }`}
+                      >
+                        {rec.wins}-{rec.losses}
                       </td>
                     );
-                  }
-                  const rec = records[rowId]?.[colId];
-                  if (!rec) {
-                    return (
-                      <td key={colId} className="py-2 px-1 text-center text-gray-700">0-0</td>
-                    );
-                  }
-                  const isWinning = rec.wins > rec.losses;
-                  const isLosing = rec.losses > rec.wins;
-                  return (
-                    <td
-                      key={colId}
-                      className={`py-2 px-1 text-center font-mono ${
-                        isWinning ? 'text-green-400' : isLosing ? 'text-red-400' : 'text-gray-400'
-                      }`}
-                    >
-                      {rec.wins}-{rec.losses}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Top Rivalries */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">Biggest Rivalries</h3>
-        <p className="text-xs text-gray-500 mb-4">Most games played head-to-head</p>
-        <div className="space-y-3">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Biggest Rivalries</h3>
+        <p className="text-xs text-gray-500 mb-3 sm:mb-4">Most games played head-to-head</p>
+        <div className="space-y-2 sm:space-y-3">
           {rivalries.map((r, i) => (
-            <div key={i} className="flex items-center gap-4 bg-gray-800/30 rounded-lg p-3">
-              <span className="text-gray-600 font-mono text-xs w-4">{i + 1}</span>
-              <div className="flex-1 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-white font-medium text-sm">{r.team1}</span>
-                  <span className="text-gray-600 text-xs">vs</span>
-                  <span className="text-white font-medium text-sm">{r.team2}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-mono">
-                    <span className={r.team1Wins > r.team2Wins ? 'text-green-400' : 'text-red-400'}>
-                      {r.team1Wins}
-                    </span>
-                    <span className="text-gray-600"> - </span>
-                    <span className={r.team2Wins > r.team1Wins ? 'text-green-400' : 'text-red-400'}>
-                      {r.team2Wins}
-                    </span>
-                  </span>
-                  <span className="text-gray-600 text-xs ml-2">({r.totalGames} games)</span>
+            <div key={i} className="bg-gray-800/30 rounded-lg p-2.5 sm:p-3">
+              <div className="flex items-center gap-2 sm:gap-4">
+                <span className="text-gray-600 font-mono text-xs w-4 shrink-0">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  {/* Desktop: single row */}
+                  <div className="hidden sm:flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-white font-medium text-sm">{r.team1}</span>
+                      <span className="text-gray-600 text-xs">vs</span>
+                      <span className="text-white font-medium text-sm">{r.team2}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-mono">
+                        <span className={r.team1Wins > r.team2Wins ? 'text-green-400' : 'text-red-400'}>
+                          {r.team1Wins}
+                        </span>
+                        <span className="text-gray-600"> - </span>
+                        <span className={r.team2Wins > r.team1Wins ? 'text-green-400' : 'text-red-400'}>
+                          {r.team2Wins}
+                        </span>
+                      </span>
+                      <span className="text-gray-600 text-xs ml-2">({r.totalGames} games)</span>
+                    </div>
+                  </div>
+                  {/* Mobile: stacked */}
+                  <div className="sm:hidden">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-white font-medium text-xs truncate">{r.team1}</span>
+                        <span className="text-gray-600 text-[10px] shrink-0">vs</span>
+                        <span className="text-white font-medium text-xs truncate">{r.team2}</span>
+                      </div>
+                      <div className="shrink-0 ml-2">
+                        <span className="text-xs font-mono">
+                          <span className={r.team1Wins > r.team2Wins ? 'text-green-400' : 'text-red-400'}>
+                            {r.team1Wins}
+                          </span>
+                          <span className="text-gray-600">-</span>
+                          <span className={r.team2Wins > r.team1Wins ? 'text-green-400' : 'text-red-400'}>
+                            {r.team2Wins}
+                          </span>
+                        </span>
+                        <span className="text-gray-600 text-[10px] ml-1">({r.totalGames}g)</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

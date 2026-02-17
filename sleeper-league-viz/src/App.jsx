@@ -36,13 +36,13 @@ export default function App() {
     <div className="min-h-screen bg-gray-950">
       <Header leagueInfo={data.leagueInfo} seasons={data.seasons} />
       <nav className="sticky top-0 z-40 bg-gray-950/90 backdrop-blur-md border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-1 overflow-x-auto py-2">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4">
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide py-2">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3 sm:px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all cursor-pointer min-h-[44px] ${
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
@@ -55,7 +55,7 @@ export default function App() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {activeTab === 'overview' && <LeagueOverview data={data} />}
         {activeTab === 'rankings' && <FranchiseRankings data={data} />}
         {activeTab === 'h2h' && <HeadToHead data={data} />}
@@ -63,7 +63,7 @@ export default function App() {
         {activeTab === 'drafts' && <DraftHistory data={data} />}
       </main>
 
-      <footer className="border-t border-gray-800 py-6 text-center text-gray-600 text-xs">
+      <footer className="border-t border-gray-800 py-6 text-center text-gray-600 text-xs safe-bottom">
         Dynasty League Visualizer — Powered by Sleeper API
         {Object.keys(data.ktcValues || {}).length > 0 && ' & KeepTradeCut'}
       </footer>
