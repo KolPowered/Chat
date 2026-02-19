@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/ktc-proxy/:path*",
+      "destination": "https://keeptradecut.com/:path*"
+    }
+  ]
+}
