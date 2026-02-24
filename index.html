@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sleeper Dynasty History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                bg: '#0b1020',
+                panel: '#121a2e',
+                accent: '#60a5fa',
+                accent2: '#c084fc',
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      body { background: #0b1020; color: #e5e7eb; }
+      .glass { background: rgba(18, 26, 46, 0.9); backdrop-filter: blur(4px); }
+      .fade-in { animation: fadeIn .35s ease-in; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(5px);} to {opacity:1; transform: translateY(0);} }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <div id="root"></div>
+    <script type="text/babel" src="./app.js"></script>
+  </body>
+</html>
