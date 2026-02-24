@@ -16,7 +16,8 @@ const {
   Radar,
 } = Recharts;
 
-const LEAGUE_ID = '1194720426382082048';
+const DEFAULT_LEAGUE_ID = '1194720426382082048';
+const LEAGUE_ID = new URLSearchParams(window.location.search).get('leagueId') || DEFAULT_LEAGUE_ID;
 const BASE = 'https://api.sleeper.app/v1';
 
 const tabs = [
@@ -126,6 +127,7 @@ function App() {
       <header className="mb-6">
         <h1 className="text-3xl md:text-4xl font-bold text-white">Dynasty League Deep Dive</h1>
         <p className="text-slate-400 mt-2">Sleeper League {LEAGUE_ID} • {dataset.seasonsCount} seasons</p>
+        <p className="text-slate-500 text-xs mt-1">Tip: use <code>?leagueId=&lt;id&gt;</code> in the URL to load another league.</p>
       </header>
 
       <nav className="flex flex-wrap gap-2 mb-6">
